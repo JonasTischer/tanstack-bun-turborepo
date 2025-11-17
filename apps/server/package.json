@@ -1,0 +1,24 @@
+{
+  "name": "@whispa/server",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --hot src/index.ts",
+    "build": "bun build src/index.ts --outdir=dist --target=bun",
+    "start": "bun dist/index.js",
+    "lint": "biome check .",
+    "check-types": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "private": true,
+  "dependencies": {
+    "@whispa/auth": "*",
+    "@whispa/db": "*",
+    "@whispa/env": "*",
+    "@whispa/logger": "*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^22.10.2",
+    "typescript": "5.9.2"
+  }
+}

@@ -1,0 +1,48 @@
+# syntax=docker/dockerfile:1
+
+FROM oven/bun:1 AS base
+
+# Prune the monorepo to only include backend and its dependencies
+FROM base AS pruner
+WORKDIR /app
+RUN bun install -g turbo
+COPY . .
+RUN turbo prune @whispa/backend --docker
+
+# Install dependencies
+FROM base AS installer
+WORKDIR /app
+
+# Copy pruned lockfile and package.json files
+COPY --from=pruner /app/out/json/ .
+RUN bun install --frozen-lockfile
+
+# Copy pruned source code
+COPY --from=pruner /app/out/full/ .
+
+# Copy typescript-config (not included in prune but needed for tsconfig extends)
+COPY packages/typescript-config ./packages/typescript-config
+
+# Install production dependencies only
+FROM base AS prod-deps
+WORKDIR /app
+COPY --from=pruner /app/out/json/ .
+RUN bun install --frozen-lockfile --production
+
+# Final runner stage
+FROM base AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=3001
+
+# Copy production dependencies and source
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=installer /app/apps/backend ./apps/backend
+COPY --from=installer /app/packages ./packages
+COPY --from=installer /app/package.json ./package.json
+
+WORKDIR /app/apps/backend
+
+EXPOSE 3001
+CMD ["bun", "src/index.ts"]
