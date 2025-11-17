@@ -24,6 +24,7 @@
     "check-types": "turbo check-types",
     "test": "turbo test",
     "lint": "biome check --write .",
+    "lint:check": "biome check .",
     "format": "biome format --write .",
     "prepare": "[ -d .git ] && lefthook install || echo 'Skipping lefthook'",
     "dev:native": "turbo -F native dev",
